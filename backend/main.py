@@ -198,14 +198,20 @@ def _cache_key(*parts: Any) -> str:
 
 
 def _get_cached_response(key: str):
+    global _cache_hits, _cache_misses
     try:
         cached = _redis_client.get(key)
 
         if cached is not None:
             return json.loads(cached)
 
-    except (RedisError, json.JSONDecodeError):
-        pass
+    if _redis_client is not None:
+        try:
+            cached = _redis_client.get(key)
+            if cached is not None:
+                return json.loads(cached)
+        except (RedisError, json.JSONDecodeError):
+            pass
 
     with _cache_lock:
         cached = _response_cache.get(key)
@@ -1257,32 +1263,14 @@ async def upload_dataset(
 # ── Build Models ──────────────────────────────────────────────────────
 @app.post("/api/build")
 def build_models(
+    request: Request,
+    response: Response,
     _csrf: None = Depends(csrf_header_dep),
     _admin: None = Depends(_admin_access_dep),
 ):
-    global STAGING_MODEL_VERSION
-    try:
-       sb = get_supabase_admin()
-    except RuntimeError:
-        sb = get_supabase()
-    all_products = []
-    page_size = 1000
-    offset = 0
-    while True:
-        result = sb.table('products').select('id, title, description, category, rating, avg_sentiment, review_count').range(offset, offset + page_size - 1).execute()
-        batch = result.data or []
-        all_products.extend(batch)
-        if len(batch) < page_size:
-            break
-        offset += page_size
-    if not all_products:
-        raise HTTPException(400, "No products in database. Upload data first.")
-    import pandas as pd
-    item_df = pd.DataFrame(all_products)
-    item_df['combined'] = (
-        item_df['title'].astype(str) + ' ' +
-        item_df['description'].fillna('').astype(str) + ' ' +
-        item_df['category'].fillna('').astype(str)
+    rate_limited = _apply_rate_limit(
+        request, response, "build",
+        "BUILD_RATE_LIMIT", 1,
     )
     item_df['review_count'] = item_df['review_count'].fillna(0).astype(int)
     start_time = time.time()

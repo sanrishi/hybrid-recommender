@@ -198,14 +198,20 @@ def _cache_key(*parts: Any) -> str:
 
 
 def _get_cached_response(key: str):
+    global _cache_hits, _cache_misses
     try:
         cached = _redis_client.get(key)
 
         if cached is not None:
             return json.loads(cached)
 
-    except (RedisError, json.JSONDecodeError):
-        pass
+    if _redis_client is not None:
+        try:
+            cached = _redis_client.get(key)
+            if cached is not None:
+                return json.loads(cached)
+        except (RedisError, json.JSONDecodeError):
+            pass
 
     with _cache_lock:
         cached = _response_cache.get(key)
@@ -1961,8 +1967,10 @@ def get_user_purchases(user_id: str, limit: int = Query(50, ge=1, le=200)):
 
 @app.post("/api/purchases")
 def create_purchase(
+    request: Request,
     data: PurchaseCreate,
     _csrf: None = Depends(csrf_header_dep),
+    _admin: None = Depends(_admin_access_dep),
 ):
     sb = get_supabase()
     result = sb.table('purchases').insert({

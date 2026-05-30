@@ -198,14 +198,20 @@ def _cache_key(*parts: Any) -> str:
 
 
 def _get_cached_response(key: str):
+    global _cache_hits, _cache_misses
     try:
         cached = _redis_client.get(key)
 
         if cached is not None:
             return json.loads(cached)
 
-    except (RedisError, json.JSONDecodeError):
-        pass
+    if _redis_client is not None:
+        try:
+            cached = _redis_client.get(key)
+            if cached is not None:
+                return json.loads(cached)
+        except (RedisError, json.JSONDecodeError):
+            pass
 
     with _cache_lock:
         cached = _response_cache.get(key)
@@ -1909,7 +1915,7 @@ def list_items(page: int = Query(1, ge=1), limit: int = Query(20, ge=1, le=100))
         .execute()
 
     result = sb.table('products').select('id, title, description, category, rating, avg_sentiment, review_count').order('rating', desc=True).range(offset, offset + limit - 1).execute()
-    count_result = sb.table('products').select('id', count='exact').limit(0).execute()
+    count_result = sb.table('products').select('id', count='estimated').limit(0).execute()
     total = count_result.count or 0
     items = []
     for p in (result.data or []):

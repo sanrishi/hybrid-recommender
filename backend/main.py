@@ -146,6 +146,7 @@ def _cache_key(*parts: Any) -> str:
 
 
 def _get_cached_response(key: str):
+    global _cache_hits, _cache_misses
     try:
         cached = _redis_client.get(key)
 
@@ -159,7 +160,6 @@ def _get_cached_response(key: str):
         cached = _response_cache.get(key)
 
         if not cached:
-            global _cache_misses
             _cache_misses += 1
             return None
 
@@ -167,10 +167,8 @@ def _get_cached_response(key: str):
 
         if expires_at <= time.time():
             _response_cache.pop(key, None)
-            global _cache_misses
             _cache_misses += 1
             return None
-        global _cache_hits
         _cache_hits += 1
         return value
 
@@ -178,17 +176,6 @@ def _get_cached_response(key: str):
 def _set_cached_response(key: str, value: Any) -> None:
     with _cache_lock:
         _response_cache[key] = (time.time() + CACHE_TTL_SECONDS, value)
-        # track misses -> when we set a value it was previously a miss for the next requests
-        # metric updated in _get_cached_response when read.
-
-    except (RedisError, TypeError):
-        pass
-
-    with _cache_lock:
-        _response_cache[key] = (
-            time.time() + CACHE_TTL_SECONDS,
-            value,
-        )
 
 def _clear_response_cache() -> None:
     with _cache_lock:
@@ -1133,12 +1120,10 @@ def _validate_upload_bytes(filename: str, ext: str, contents: bytes) -> None:
 @app.post("/api/upload")
 async def upload_dataset(
     file: UploadFile = File(...),
-    admin=Depends(_require_admin_access)
-):
-    """Upload a CSV or JSON dataset and import into Supabase."""
-    import math
+    admin=Depends(_require_admin_access),
     _csrf: None = Depends(csrf_header_dep),
 ):
+    """Upload a CSV or JSON dataset and import into Supabase."""
     filename = file.filename or "data.csv"
     ext = os.path.splitext(filename)[1].lower()
     if ext not in ('.csv', '.json'):
@@ -1751,7 +1736,7 @@ def similarity_matrix(items: str = Query(...)):
 
 # ── Weights ───────────────────────────────────────────────────────────
 @app.get("/api/models")
-def list_models():
+def list_models(_admin: None = Depends(_admin_access_dep)):
     return {
         "active_model": ACTIVE_MODEL_VERSION,
         "shadow_model": SHADOW_MODEL_VERSION,
@@ -1835,7 +1820,7 @@ def move_model_to_shadow(
     }
 
 @app.get("/api/weights")
-def get_weights():
+def get_weights(_admin: None = Depends(_admin_access_dep)):
     if not models["ready"]:
         return {"alpha": 0.5, "beta": 0.3, "gamma": 0.2}
     return models["hybrid"].get_weights()

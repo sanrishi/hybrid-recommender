@@ -198,14 +198,20 @@ def _cache_key(*parts: Any) -> str:
 
 
 def _get_cached_response(key: str):
+    global _cache_hits, _cache_misses
     try:
         cached = _redis_client.get(key)
 
         if cached is not None:
             return json.loads(cached)
 
-    except (RedisError, json.JSONDecodeError):
-        pass
+    if _redis_client is not None:
+        try:
+            cached = _redis_client.get(key)
+            if cached is not None:
+                return json.loads(cached)
+        except (RedisError, json.JSONDecodeError):
+            pass
 
     with _cache_lock:
         cached = _response_cache.get(key)
@@ -1945,7 +1951,12 @@ def get_categories():
 
 # ── Purchases ─────────────────────────────────────────────────────────
 @app.get("/api/purchases/{user_id}")
-def get_user_purchases(user_id: str, limit: int = Query(50, ge=1, le=200)):
+def get_user_purchases(
+    request: Request,
+    user_id: str,
+    _admin: None = Depends(_admin_access_dep),
+    limit: int = Query(50, ge=1, le=200),
+):
     _validate_user_id(user_id)  # allowlist-validate before any DB call
     sb = get_supabase()
     result = (

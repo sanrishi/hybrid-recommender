@@ -198,14 +198,20 @@ def _cache_key(*parts: Any) -> str:
 
 
 def _get_cached_response(key: str):
+    global _cache_hits, _cache_misses
     try:
         cached = _redis_client.get(key)
 
         if cached is not None:
             return json.loads(cached)
 
-    except (RedisError, json.JSONDecodeError):
-        pass
+    if _redis_client is not None:
+        try:
+            cached = _redis_client.get(key)
+            if cached is not None:
+                return json.loads(cached)
+        except (RedisError, json.JSONDecodeError):
+            pass
 
     with _cache_lock:
         cached = _response_cache.get(key)
@@ -235,11 +241,14 @@ def _set_cached_response(key: str, value: Any) -> None:
         pass
 
 def _clear_response_cache() -> None:
-    with _cache_lock:
-        _response_cache.clear()
-        global _cache_hits, _cache_misses
-        _cache_hits = 0
-        _cache_misses = 0
+    global _cache_hits, _cache_misses
+    _response_cache.clear()
+    _cache_hits = 0
+    _cache_misses = 0
+
+def _clear_trending_cache() -> None:
+    global TRENDING_CACHE
+    TRENDING_CACHE = {"data": None, "timestamp": None}
 
 
 @app.get("/api/cache_metrics")
@@ -1239,6 +1248,7 @@ async def upload_dataset(
                 errors.append(f"Batch {start}-{start+len(rows)}: {str(e)[:100]}")
         models["ready"] = False
         _clear_response_cache()
+        _clear_trending_cache()
         result = {
             "message": f"Imported {imported:,} products from {filename}",
             "imported": imported, "total_rows": total,
@@ -1338,6 +1348,7 @@ def build_models(
     models["build_time"] = build_time
     models["last_trained_at"] = datetime.now(timezone.utc).isoformat()
     _clear_response_cache()
+    _clear_trending_cache()
     precomputed_count = _precompute_recommendation_cache(top_n=10, explain=False)
     return {
         "message": "Models built successfully!",
@@ -1346,7 +1357,7 @@ def build_models(
         "items": len(item_df),
         "has_collaborative": collab_model is not None,
         "build_time_seconds": build_time,
-	"precomputed_recommendations": precomputed_count,
+        "precomputed_recommendations": precomputed_count,
     }
 
 @app.post("/api/train/federated")
@@ -1427,6 +1438,7 @@ def train_federated(
     models["build_time"] = build_time
     models["last_trained_at"] = datetime.now(timezone.utc).isoformat()
     _clear_response_cache()
+    _clear_trending_cache()
 
     return {
         "message": "Federated collaborative model trained successfully!",
@@ -1972,6 +1984,7 @@ def create_purchase(
         'review_text': data.review_text,  # max_length=1000 enforced by PurchaseCreate
     }).execute()
     _clear_response_cache()
+    _clear_trending_cache()
     return {"purchase": result.data}
 # ── Trending Products ───────────────────────────────────────────────
 

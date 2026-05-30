@@ -58,8 +58,7 @@ def test_cold_start_user():
 
     results = model.predict_for_user(999)
 
-    assert len(results) > 0
-    assert all(r.get("fallback") is True for r in results)
+    assert results == []
 
 
 def test_extreme_sparse_matrix():

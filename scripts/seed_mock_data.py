@@ -5,9 +5,6 @@ Creates realistic user-product interactions to solve the cold start problem.
 Usage:
     python scripts/seed_mock_data.py
     python scripts/seed_mock_data.py --users 50 --purchases 2000
-
-Optimized via Issue #490: Implements strict pathlib absolute context mappings 
-to prevent relative lookup path anomalies across multi-tier runtime environments.
 """
 import os
 import sys
@@ -15,14 +12,8 @@ import random
 import argparse
 import secrets
 import string
-from pathlib import Path
 
-# --- FIX FOR ISSUE #490: Standardize absolute resource paths using pathlib utilities ---
-SCRIPT_DIR = Path(__file__).parent.resolve()
-PROJECT_ROOT = SCRIPT_DIR.parent
-
-# Safely append project root to sys.path using absolute system reference strings
-sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from tqdm import tqdm
 from src.data.db import get_supabase_admin

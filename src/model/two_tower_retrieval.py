@@ -3,6 +3,8 @@ Two-Tower Neural Retrieval Model for Scalable Candidate Generation.
 Uses dual encoders for users and items, indexed via FAISS for sub-10ms retrieval.
 """
 import os
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 import torch
@@ -36,7 +38,8 @@ class ItemTower(nn.Module):
 
 
 class TwoTowerRetrievalEngine:
-    def __init__(self, embedding_dim=128):
+    def __init__(self, embedding_dim: int = 128) -> None:
+        """Initialize the two-tower retrieval engine."""
         self.embedding_dim = embedding_dim
         self.user_tower = None
         self.item_tower = None
@@ -45,7 +48,7 @@ class TwoTowerRetrievalEngine:
         self.rev_item_map = {}
         self.faiss_index_to_item = []  # maps FAISS position directly to item ID
 
-    def fit_and_index(self, interactions_df: pd.DataFrame, items_df: pd.DataFrame, epochs=3):
+    def fit_and_index(self, interactions_df: pd.DataFrame, items_df: pd.DataFrame, epochs: int = 3) -> None:
         """Trains the dual encoders and pre-builds the FAISS IVF index."""
         # 1. Map string tokens to continuous integers for Embedding layers
         unique_users = sorted(interactions_df['user_id'].unique())
@@ -94,7 +97,7 @@ class TwoTowerRetrievalEngine:
         faiss.normalize_L2(raw_item_vectors)
         self.faiss_index.add(raw_item_vectors)
 
-    def retrieve_candidates(self, user_idx_token: int, top_k=100) -> list:
+    def retrieve_candidates(self, user_idx_token: int, top_k: int = 100) -> list[str]:
         """Executes sub-10ms Approximate Nearest Neighbor lookup via FAISS."""
         if self.user_tower is None or self.faiss_index is None:
             return []

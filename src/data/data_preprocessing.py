@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
@@ -32,7 +34,7 @@ def normalize_ratings(
 
 def encode_categorical(
     df: pd.DataFrame,
-    columns: list = None
+    columns: Optional[list[str]] = None
 ) -> pd.DataFrame:
     """Label encode categorical columns."""
     df = df.copy()

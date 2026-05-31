@@ -24,7 +24,7 @@ import json
 import math
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -227,7 +227,7 @@ def _build_test_data(data_path: str | None = None):
 # Recommendation engine wrappers
 # ---------------------------------------------------------------------------
 
-def _get_content_recs(title: str, df: pd.DataFrame, tfidf_matrix, k: int) -> list[str]:
+def _get_content_recs(title: str, df: pd.DataFrame, tfidf_matrix: Any, k: int) -> list[str]:
     """Return top-K titles using content-based (TF-IDF cosine) similarity."""
     from sklearn.metrics.pairwise import cosine_similarity
 
@@ -242,7 +242,7 @@ def _get_content_recs(title: str, df: pd.DataFrame, tfidf_matrix, k: int) -> lis
     return df.iloc[top_indices]["title"].tolist()
 
 
-def _get_collab_recs(title: str, df: pd.DataFrame, svd_matrix, k: int) -> list[str]:
+def _get_collab_recs(title: str, df: pd.DataFrame, svd_matrix: Any, k: int) -> list[str]:
     """Return top-K titles using collaborative filtering (SVD) similarity."""
     from sklearn.metrics.pairwise import cosine_similarity
 
@@ -277,8 +277,8 @@ def _get_sentiment_recs(title: str, df: pd.DataFrame, k: int) -> list[str]:
 def _get_hybrid_recs(
     title: str,
     df: pd.DataFrame,
-    tfidf_matrix,
-    svd_matrix,
+    tfidf_matrix: Any,
+    svd_matrix: Any,
     alpha: float,
     beta: float,
     gamma: float,
@@ -526,7 +526,7 @@ def run_evaluation(
 # Matrix helpers — load pre-built or build on-the-fly
 # ---------------------------------------------------------------------------
 
-def _load_or_build_tfidf(df: pd.DataFrame):
+def _load_or_build_tfidf(df: pd.DataFrame) -> Any:
     """Load TF-IDF matrix from disk if available, else build from scratch."""
     cache_path = Path(os.getenv("TFIDF_CACHE", "models/tfidf_matrix.npz"))
     if cache_path.exists():
@@ -548,7 +548,7 @@ def _load_or_build_tfidf(df: pd.DataFrame):
     return vectorizer.fit_transform(df[text_col].fillna(""))
 
 
-def _load_or_build_svd(df: pd.DataFrame):
+def _load_or_build_svd(df: pd.DataFrame) -> Any:
     """Load SVD matrix from disk if available, else build from scratch."""
     cache_path = Path(os.getenv("SVD_CACHE", "models/svd_matrix.npy"))
     if cache_path.exists():

@@ -27,7 +27,7 @@ class FederatedClient:
         self.user_factor = None
 
     def compute_local_user_factor(
-        self, global_item_factors: np.ndarray, title_to_idx: dict, n_factors: int, reg: float = 0.05
+        self, global_item_factors: np.ndarray, title_to_idx: dict[str, int], n_factors: int, reg: float = 0.05
     ) -> np.ndarray:
         """
         Computes the client's local user vector (latent factor) using Ridge Regression
@@ -51,7 +51,7 @@ class FederatedClient:
 
     def compute_local_item_updates(
         self, global_item_factors: np.ndarray, title_to_idx: dict, reg: float = 0.05
-    ) -> dict:
+    ) -> dict[str, np.ndarray]:
         """
         Computes local updates (gradients) for the global item factors based on the
         reconstruction error of private ratings. Only updates items the user has rated.
@@ -83,7 +83,7 @@ class FederatedServer:
     and updates the global collaborative model parameters.
     """
 
-    def __init__(self, item_list: list, n_factors: int = 20, learning_rate: float = 0.05, reg: float = 0.05):
+    def __init__(self, item_list: list, n_factors: int = 20, learning_rate: float = 0.05, reg: float = 0.05) -> None:
         """
         item_list: List of all unique item titles.
         n_factors: Number of SVD latent dimensions.
@@ -103,7 +103,7 @@ class FederatedServer:
             0.0, 0.1, size=(self.n_factors, len(self.item_list))
         )
 
-    def aggregate_updates(self, client_updates_list: list):
+    def aggregate_updates(self, client_updates_list: list) -> None:
         """
         Aggregates local updates from multiple clients using Federated Averaging (FedAvg)
         and performs a global gradient descent update step.

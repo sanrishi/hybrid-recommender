@@ -82,7 +82,7 @@ class IssueClassifier:
     Trains on SEED_DATA using TF-IDF + Logistic Regression and uses regex checks.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.vectorizer = None
         self.models = {}
         self.categories = ["type", "domain", "level", "priority"]
@@ -90,7 +90,8 @@ class IssueClassifier:
         if HAS_SKLEARN:
             self._train()
             
-    def _train(self):
+    def _train(self) -> None:
+        """Train TF-IDF vectorizer and logistic regression classifiers on seed data."""
         texts = [item["text"].lower() for item in SEED_DATA]
         self.vectorizer = TfidfVectorizer(max_features=500, stop_words="english", ngram_range=(1, 2))
         X = self.vectorizer.fit_transform(texts)
@@ -213,6 +214,7 @@ def get_suggested_assignees(domain: str) -> List[str]:
 def format_triage_comment(predictions: Dict[str, Dict[str, Any]], assignees: List[str]) -> str:
     """Formats a user-friendly GSSoC triage comment with reasoning."""
     def clean_label(cat: str, val: str) -> str:
+        """Format a triage label for a given category and value."""
         if cat == "type":
             return f"type:{val}"
         if cat == "domain":

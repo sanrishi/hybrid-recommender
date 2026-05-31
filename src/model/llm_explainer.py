@@ -57,7 +57,7 @@ class LLMExplainer:
         query_item: str,
         scores: Dict[str, float],
         description: str = "",
-        top_reviews: list = None,
+        top_reviews: Optional[list] = None,
         category: str = "",
     ) -> str:
         """
@@ -172,7 +172,18 @@ Generate a COMPLETE, FULL explanation (not truncated):"""
         description: str = "",
         category: str = "",
     ) -> str:
-        """Generate a detailed text-based explanation when LLM is unavailable."""
+        """Generate a detailed text-based explanation when LLM is unavailable.
+        
+        Args:
+            recommended_item: The item being recommended.
+            query_item: The item the user queried.
+            scores: Dict with score components.
+            description: Item description text.
+            category: Item category.
+            
+        Returns:
+            A human-readable explanation string.
+        """
         # Find the highest scoring component
         valid_scores = {k: v for k, v in scores.items() if v is not None and isinstance(v, (int, float))}
         max_score_name = max(valid_scores, key=valid_scores.get) if valid_scores else "hybrid"
@@ -200,9 +211,9 @@ Generate a COMPLETE, FULL explanation (not truncated):"""
 
     def explain_multiple(
         self,
-        recommendations: list,
+        recommendations: list[dict[str, Any]],
         query_item: str,
-    ) -> list:
+    ) -> list[dict[str, Any]]:
         """
         Generate explanations for multiple recommendations.
 

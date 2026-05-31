@@ -34,6 +34,8 @@ without changing CausalDebiaser or HybridRecommender.
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -127,7 +129,7 @@ class PropensityModel:
         """Return a copy of the full title → propensity mapping."""
         return dict(self._scores)
 
-    def summary(self) -> dict:
+    def summary(self) -> dict[str, Any]:
         """Descriptive statistics over the propensity distribution."""
         if not self._scores:
             return {}

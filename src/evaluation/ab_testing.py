@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Mapping
+from typing import Any, Dict, Iterable, List, Mapping
 
 
 DEFAULT_EXPERIMENT_ID = "recommendation-ranking-v1"
@@ -50,6 +50,7 @@ DEFAULT_VARIANTS = (
 
 
 def _stable_bucket(experiment_id: str, user_key: str) -> int:
+    """Deterministic hash-based bucket assignment for a user in an experiment."""
     digest = hashlib.sha256(f"{experiment_id}:{user_key}".encode("utf-8")).hexdigest()
     return int(digest[:12], 16)
 
@@ -79,7 +80,7 @@ def assign_variant(
 
 
 @contextmanager
-def temporary_weights(recommender, weights: Mapping[str, float]):
+def temporary_weights(recommender: Any, weights: Mapping[str, float]) -> Any:
     """Apply weights for one recommendation call, then restore originals."""
     original_weights = recommender.get_weights()
     recommender.set_weights(
@@ -98,7 +99,7 @@ def temporary_weights(recommender, weights: Mapping[str, float]):
 
 
 def run_recommendation_experiment(
-    recommender,
+    recommender: Any,
     title: str,
     user_key: str,
     top_n: int = 10,

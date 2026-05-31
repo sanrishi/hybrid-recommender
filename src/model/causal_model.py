@@ -67,6 +67,8 @@ Design decisions
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -255,7 +257,7 @@ class CausalDebiaser:
         """Return the clipped IPS weight for a given item title."""
         return self._propensity_model.get_ips_weight(title, self.clip_max)
 
-    def summary(self) -> dict:
+    def summary(self) -> dict[str, Any]:
         """
         Return a summary of the propensity distribution for diagnostics.
         Useful for logging and the /evaluate endpoint.

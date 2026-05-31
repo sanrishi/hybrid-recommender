@@ -4,7 +4,10 @@ Compares baseline models against the Semantic-Hybrid approach.
 """
 import os
 import sys
+from typing import Optional
+
 import numpy as np
+import pandas as pd
 import random
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -21,24 +24,26 @@ from src.evaluation.evaluation import (
 from src.model.causal_config import CausalConfig
 
 class RandomRecommender:
-    def __init__(self, item_titles):
+    def __init__(self, item_titles) -> None:
         self.items = list(item_titles)
         
-    def recommend(self, title, user_id=None, top_n=10):
+    def recommend(self, title: str, user_id: Optional[str] = None, top_n: int = 10) -> list[dict[str, str]]:
+        """Return random item recommendations."""
         recs = random.sample(self.items, min(top_n, len(self.items)))
         return [{'title': t} for t in recs]
 
 class PopularityRecommender:
-    def __init__(self, item_df):
+    def __init__(self, item_df: pd.DataFrame) -> None:
         if 'rating' in item_df.columns:
             self.popular_items = item_df.sort_values('rating', ascending=False)['title'].tolist()
         else:
             self.popular_items = item_df['title'].tolist()
         
-    def recommend(self, title, user_id=None, top_n=10):
+    def recommend(self, title: str, user_id: Optional[str] = None, top_n: int = 10) -> list[dict[str, str]]:
+        """Return most popular item recommendations."""
         return [{'title': t} for t in self.popular_items[:top_n]]
 
-def run_benchmark():
+def run_benchmark() -> None:
     print("Building test data and base models...")
     content_model, collab_model, item_df, test_pairs = _build_test_data()
     

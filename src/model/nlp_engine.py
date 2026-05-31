@@ -14,7 +14,7 @@ except LookupError:
 
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
-_analyzer = SentimentIntensityAnalyzer()
+_analyzer: SentimentIntensityAnalyzer = SentimentIntensityAnalyzer()
 
 
 def analyze_sentiment(text: str) -> float:

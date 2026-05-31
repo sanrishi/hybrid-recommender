@@ -74,7 +74,7 @@ class CausalConfig:
             raise ValueError("score_key must be a non-empty string")
         return self
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         """Serialise to a plain dict — useful for API responses and logging."""
         return {
             'enabled': self.enabled,
@@ -84,7 +84,7 @@ class CausalConfig:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> 'CausalConfig':
+    def from_dict(cls, d: dict[str, object]) -> 'CausalConfig':
         """Deserialise from a plain dict — useful for loading from .env or JSON config."""
         return cls(
             enabled=bool(d.get('enabled', True)),

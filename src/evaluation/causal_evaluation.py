@@ -50,7 +50,7 @@ Usage
 from __future__ import annotations
 
 from collections import Counter
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -107,7 +107,7 @@ def _intra_list_diversity(titles: list[str], category_map: dict[str, str]) -> fl
     return 1.0 - (most_common_count / len(titles))
 
 
-def _get_rec_titles(model, query: str, top_n: int) -> list[str]:
+def _get_rec_titles(model: Any, query: str, top_n: int) -> list[str]:
     """Call model.recommend() and extract title strings safely."""
     try:
         recs = model.recommend(query, top_n=top_n)
@@ -121,12 +121,12 @@ def _get_rec_titles(model, query: str, top_n: int) -> list[str]:
 # ---------------------------------------------------------------------------
 
 def compare_causal_vs_baseline(
-    causal_model,
-    baseline_model,
+    causal_model: Any,
+    baseline_model: Any,
     item_df: pd.DataFrame,
     query_titles: list[str],
     top_n: int = 10,
-) -> dict:
+) -> dict[str, Any]:
     """
     Compare causal vs. baseline recommendation lists across a set of queries.
 
@@ -203,12 +203,12 @@ def compare_causal_vs_baseline(
 
 
 def score_key_distribution(
-    model,
+    model: Any,
     item_df: pd.DataFrame,
     query_titles: list[str],
     top_n: int = 10,
     score_key: str = "hybrid_score",
-) -> dict:
+) -> dict[str, Any]:
     """
     Compute descriptive statistics of a score field across all recommendation
     lists.  Useful for verifying that causal scores stay in [0, 1] and that

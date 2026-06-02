@@ -1988,7 +1988,10 @@ def get_trending_products(
 ):
     """
     Get trending products based on recent interactions.
-    now = datetime.utcnow()
+    """
+
+    # Cache for 1 hour
+    now = datetime.now(timezone.utc)
 
     # Cache for 1 hour
     now = datetime.now(timezone.utc)

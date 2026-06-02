@@ -1994,7 +1994,7 @@ def get_trending_products(
     now = datetime.now(timezone.utc)
 
     if (
-        (now - TRENDING_CACHE["timestamp"]).seconds < 3600
+        TRENDING_CACHE["data"] is not None and
         TRENDING_CACHE["timestamp"] is not None and
         (now - TRENDING_CACHE["timestamp"]).total_seconds() < 3600
     ):
